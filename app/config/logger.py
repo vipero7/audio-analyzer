@@ -2,7 +2,7 @@ import sys
 
 from loguru import logger
 
-from app.config.base import Config
+from app.config.base import settings
 
 
 def setup_logging():
@@ -13,9 +13,9 @@ def setup_logging():
         level="INFO",
     )
 
-    if Config.ENV == "local":
-        Config.LOG_DIR.mkdir(parents=True, exist_ok=True)
-        log_file_path = Config.LOG_DIR / "app.log"
+    if settings.ENV == "local":
+        settings.LOG_DIR.mkdir(parents=True, exist_ok=True)
+        log_file_path = settings.LOG_DIR / "app.log"
 
         logger.add(
             log_file_path,
