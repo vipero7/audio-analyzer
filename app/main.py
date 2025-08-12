@@ -1,14 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config.logger import get_logger
+from app.config.logger import get_logger, setup_logging
 
 logger = get_logger(__name__)
 
 
 def create_app() -> FastAPI:
-    logger.info("Starting create_app method")
+    setup_logging()
 
+    logger.info("Starting create_app method")
     app = FastAPI(
         title="Audio Analyzer & Classifier API",
         description="Async audio analysis and classification microservice",
