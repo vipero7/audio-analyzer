@@ -19,11 +19,14 @@ class Settings(BaseSettings):
     MAX_DURATION: float
     TEMP_DIR: str
 
+    CACHE_MAX_MEMORY: str
+    CACHE_POLICY: str
+
     BASE_DIR: Path = BASE_DIR
     APP_DIR: Path = BASE_DIR / "app"
     LOG_DIR: Path = BASE_DIR / "app" / "logs"
 
-    model_config = {"env_file": str(ENV_PATH), "env_file_encoding": "utf-8", "extra": "ignore"}
+    model_config = {"env_file": BASE_DIR / ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 settings = Settings()

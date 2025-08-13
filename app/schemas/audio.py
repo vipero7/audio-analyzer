@@ -1,12 +1,13 @@
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field, HttpUrl, validator
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 
 class AudioAnalysisRequest(BaseModel):
     audio_url: HttpUrl
 
-    @validator("audio_url")
+    @field_validator("audio_url")
+    @classmethod
     def validate_audio_url(cls, v):
         url_str = str(v)
         valid_extensions = [".mp3", ".wav", ".ogg", ".m4a", ".flac"]

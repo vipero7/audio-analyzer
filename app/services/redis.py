@@ -14,6 +14,10 @@ class RedisService:
         try:
             self.redis = redis.from_url(settings.REDIS_URL, decode_responses=True)
             await self.redis.ping()
+
+            await self.redis.config_set("maxmemory", settings.CACHE_MAX_MEMORY)
+            await self.redis.config_set("maxmemory-policy", settings.CACHE_POLICY)
+
             self._connected = True
         except Exception as e:
             self._connected = False

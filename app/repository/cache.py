@@ -9,7 +9,7 @@ class CacheRepository:
     def __init__(self, redis_service: RedisService):
         self.redis = redis_service
 
-    def _generate_key(self, url: str) -> str:
+    def generate_key(self, url: str) -> str:
         hash_value = hashlib.sha256(url.encode()).hexdigest()[:16]
         return f"audio:{hash_value}"
 
@@ -17,7 +17,7 @@ class CacheRepository:
         if not self.redis.is_connected():
             return None
 
-        key = self._generate_key(url)
+        key = self.generate_key(url)
         data = await self.redis.get(key)
         return json.loads(data) if data else None
 
@@ -25,5 +25,5 @@ class CacheRepository:
         if not self.redis.is_connected():
             return False
 
-        key = self._generate_key(url)
+        key = self.generate_key(url)
         return await self.redis.setex(key, ttl, json.dumps(data))

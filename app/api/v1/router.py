@@ -10,13 +10,6 @@ logger = get_logger(__name__)
 api_router = APIRouter()
 
 
-@api_router.get("/metrics/test")
-async def test_metrics(metrics: MetricsService = Depends(get_metrics_service)):
-    metrics.record_request()
-    metrics.record_error("test")
-    return {"message": "Metrics recorded", "check": "http://localhost:8001/metrics"}
-
-
 @api_router.post("/audio/analyze", response_model=AudioAnalysisResponse)
 async def analyze_audio(
     request: AudioAnalysisRequest,
