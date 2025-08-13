@@ -25,5 +25,8 @@ class CacheRepository:
         if not self.redis.is_connected():
             return False
 
-        key = self.generate_key(url)
-        return await self.redis.setex(key, ttl, json.dumps(data))
+        try:
+            key = self.generate_key(url)
+            return await self.redis.setex(key, ttl, json.dumps(data))
+        except Exception:
+            return False
