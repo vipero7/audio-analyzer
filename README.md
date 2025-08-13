@@ -102,6 +102,9 @@ source env/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
+# If this produces error install with uv
+pip install uv
+uv pip install -r requirements.txt
 ```
 
 ### 2. Configure Environment
