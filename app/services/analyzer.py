@@ -28,7 +28,7 @@ class AudioAnalyzerService:
             metadata = await self.downloader.download(url)
             temp_path = metadata.temp_path
 
-            features = await self._extract_features(temp_path, metadata)
+            features = await self.extract_features(temp_path, metadata)
             classification = await self.classifier.classify(temp_path)
 
             result = {
@@ -49,7 +49,7 @@ class AudioAnalyzerService:
             if temp_path:
                 self.downloader.cleanup(temp_path)
 
-    async def _extract_features(self, file_path: str, metadata) -> AudioFeatures:
+    async def extract_features(self, file_path: str, metadata) -> AudioFeatures:
         try:
             audio = AudioSegment.from_file(file_path)
 
@@ -79,12 +79,12 @@ class AudioAnalyzerService:
                     sample_rate=sr,
                     channels=1,
                     file_size=metadata.file_size,
-                    format=self._detect_format(file_path, metadata.content_type),
+                    format=self.detect_format(file_path, metadata.content_type),
                 )
             except Exception as e:
                 raise ValueError(f"Cannot process audio file: {str(e)}")
 
-    def _detect_format(self, file_path: str, content_type: str) -> AudioFormat:
+    def detect_format(self, file_path: str, content_type: str) -> AudioFormat:
         ext = os.path.splitext(file_path)[1].lower()
 
         ext_map = {

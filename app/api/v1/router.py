@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 
+from app.api.dependencies import get_audio_analyzer_service, get_metrics_service
 from app.config.logger import get_logger
 from app.schemas.audio import AudioAnalysisRequest, AudioAnalysisResponse
 from app.services.analyzer import AudioAnalyzerService
@@ -9,19 +10,18 @@ logger = get_logger(__name__)
 api_router = APIRouter()
 
 
-def get_analyzer(request: Request) -> AudioAnalyzerService:
-    return request.app.state.audio_analyzer_service
-
-
-def get_metrics(request: Request) -> MetricsService:
-    return request.app.state.metrics_service
+@api_router.get("/metrics/test")
+async def test_metrics(metrics: MetricsService = Depends(get_metrics_service)):
+    metrics.record_request()
+    metrics.record_error("test")
+    return {"message": "Metrics recorded", "check": "http://localhost:8001/metrics"}
 
 
 @api_router.post("/audio/analyze", response_model=AudioAnalysisResponse)
 async def analyze_audio(
     request: AudioAnalysisRequest,
-    analyzer: AudioAnalyzerService = Depends(get_analyzer),
-    metrics: MetricsService = Depends(get_metrics),
+    analyzer: AudioAnalyzerService = Depends(get_audio_analyzer_service),
+    metrics: MetricsService = Depends(get_metrics_service),
 ) -> AudioAnalysisResponse:
     metrics.record_request()
 

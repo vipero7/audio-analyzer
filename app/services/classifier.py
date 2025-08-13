@@ -11,8 +11,8 @@ class ClassifierService:
     async def classify(self, file_path: str) -> ClassificationResult:
         try:
             y, sr = librosa.load(file_path, sr=self.sr, duration=30.0)
-            features = self._extract_features(y, sr)
-            classification, confidence = self._classify_features(features)
+            features = self.extract_features(y, sr)
+            classification, confidence = self.classify_features(features)
 
             return ClassificationResult(
                 classification=AudioClassification(classification), confidence=confidence
@@ -20,7 +20,7 @@ class ClassifierService:
         except Exception:
             return ClassificationResult(classification=AudioClassification.NOISE, confidence=0.5)
 
-    def _extract_features(self, y: np.ndarray, sr: int) -> dict:
+    def extract_features(self, y: np.ndarray, sr: int) -> dict:
         features = {}
 
         features["rms"] = float(np.sqrt(np.mean(y**2)))
@@ -40,7 +40,7 @@ class ClassifierService:
 
         return features
 
-    def _classify_features(self, features: dict) -> tuple[str, float]:
+    def classify_features(self, features: dict) -> tuple[str, float]:
         if features["rms"] < 0.01:
             return AudioClassification.SILENCE.value, 0.95
 

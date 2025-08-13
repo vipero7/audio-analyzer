@@ -10,5 +10,4 @@ if __name__ == "__main__":
         port=settings.FASTAPI_PORT,
         reload=settings.FASTAPI_RELOAD,
         log_level="info",
-        reload_excludes=["*.log", "logs/*", "app/logs/*"],
     )
