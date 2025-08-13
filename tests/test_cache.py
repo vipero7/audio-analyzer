@@ -6,7 +6,6 @@ from app.repository.cache import CacheRepository
 from app.services.redis import RedisService
 
 
-@pytest.mark.asyncio
 class TestCacheRepository:
 
     @pytest.fixture
@@ -31,6 +30,7 @@ class TestCacheRepository:
         assert key1.startswith("audio:")
         assert len(key1) == len("audio:") + 16
 
+    @pytest.mark.asyncio
     async def test_get_cache_hit(self, cache_repository, mock_redis_service):
         test_data = {"duration": 5.0, "classification": "music"}
         mock_redis_service.get.return_value = '{"duration": 5.0, "classification": "music"}'
@@ -40,6 +40,7 @@ class TestCacheRepository:
         assert result == test_data
         mock_redis_service.get.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_get_cache_miss(self, cache_repository, mock_redis_service):
         mock_redis_service.get.return_value = None
 
@@ -48,6 +49,7 @@ class TestCacheRepository:
         assert result is None
         mock_redis_service.get.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_get_redis_disconnected(self, cache_repository, mock_redis_service):
         mock_redis_service.is_connected.return_value = False
 
@@ -56,6 +58,7 @@ class TestCacheRepository:
         assert result is None
         mock_redis_service.get.assert_not_called()
 
+    @pytest.mark.asyncio
     async def test_set_success(self, cache_repository, mock_redis_service):
         test_data = {"duration": 5.0, "classification": "music"}
         mock_redis_service.setex.return_value = True
@@ -69,6 +72,7 @@ class TestCacheRepository:
         assert call_args[0][1] == 3600
         assert "audio:" in call_args[0][0]
 
+    @pytest.mark.asyncio
     async def test_set_redis_disconnected(self, cache_repository, mock_redis_service):
         mock_redis_service.is_connected.return_value = False
         test_data = {"duration": 5.0, "classification": "music"}
@@ -78,6 +82,7 @@ class TestCacheRepository:
         assert result is False
         mock_redis_service.setex.assert_not_called()
 
+    @pytest.mark.asyncio
     async def test_set_redis_error(self, cache_repository, mock_redis_service):
         mock_redis_service.setex.side_effect = Exception("Redis error")
         test_data = {"duration": 5.0, "classification": "music"}
@@ -89,6 +94,7 @@ class TestCacheRepository:
 
         mock_redis_service.setex.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_cache_workflow(self, cache_repository, mock_redis_service):
         url = "https://example.com/test.wav"
         test_data = {"duration": 5.0, "classification": "music"}

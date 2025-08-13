@@ -3,8 +3,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import pytest_asyncio
+from fastapi.testclient import TestClient
 from httpx import AsyncClient
 
+from app.api.dependencies import get_audio_analyzer_service, get_metrics_service
 from app.main import create_app
 from app.services.analyzer import AudioAnalyzerService
 from app.services.redis import RedisService
@@ -61,18 +63,31 @@ def mock_metrics_service():
     return mock_metrics
 
 
-@pytest_asyncio.fixture
-async def test_app(mock_redis_service, mock_audio_analyzer_service, mock_metrics_service):
+@pytest.fixture
+def test_app(mock_redis_service, mock_audio_analyzer_service, mock_metrics_service):
     app = create_app()
+
+    app.dependency_overrides[get_audio_analyzer_service] = lambda: mock_audio_analyzer_service
+    app.dependency_overrides[get_metrics_service] = lambda: mock_metrics_service
+
     app.state.redis_service = mock_redis_service
     app.state.audio_analyzer_service = mock_audio_analyzer_service
     app.state.metrics_service = mock_metrics_service
+
     yield app
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def client(test_app):
+    return TestClient(test_app)
 
 
 @pytest_asyncio.fixture
-async def client(test_app):
-    async with AsyncClient(app=test_app, base_url="http://test") as ac:
+async def async_client(test_app):
+    async with AsyncClient(base_url="http://test") as ac:
+        ac.app = test_app
         yield ac
 
 

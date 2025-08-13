@@ -116,13 +116,13 @@ class TestAudioAnalyzerService:
         assert result == AudioFormat.WAV
 
 
-@pytest.mark.asyncio
 class TestDownloaderService:
 
     @pytest.fixture
     def downloader_service(self):
         return DownloaderService()
 
+    @pytest.mark.asyncio
     async def test_download_success(self, downloader_service):
         with patch("httpx.AsyncClient") as mock_client:
             mock_response = MagicMock()
@@ -159,13 +159,13 @@ class TestDownloaderService:
         assert result == ".mp3"
 
 
-@pytest.mark.asyncio
 class TestClassifierService:
 
     @pytest.fixture
     def classifier_service(self):
         return ClassifierService()
 
+    @pytest.mark.asyncio
     async def test_classify_audio_success(self, classifier_service):
         with patch("librosa.load") as mock_load:
             mock_load.return_value = ([0.1, 0.2, 0.3], 22050)
@@ -184,6 +184,7 @@ class TestClassifierService:
                 assert result.classification.value in ["speech", "music", "silence", "noise"]
                 assert 0.0 <= result.confidence <= 1.0
 
+    @pytest.mark.asyncio
     async def test_classify_audio_error_fallback(self, classifier_service):
         with patch("librosa.load", side_effect=Exception("Load failed")):
             result = await classifier_service.classify("/tmp/test.wav")

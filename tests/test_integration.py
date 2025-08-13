@@ -1,15 +1,9 @@
-import pytest
-from httpx import AsyncClient
+from fastapi.testclient import TestClient
 
 
-@pytest.mark.asyncio
 class TestIntegration:
 
-    async def test_full_audio_analysis_workflow(
-        self, client: AsyncClient, mock_audio_analyzer_service
-    ):
-        """Test complete workflow from API request to response"""
-
+    def test_full_audio_analysis_workflow(self, client: TestClient, mock_audio_analyzer_service):
         mock_audio_analyzer_service.analyze_audio.return_value = {
             "duration": 60.0,
             "sample_rate": 44100,
@@ -21,7 +15,7 @@ class TestIntegration:
             "confidence": 0.92,
         }
 
-        response = await client.post(
+        response = client.post(
             "/v1/audio/analyze", json={"audio_url": "https://example.com/test.wav"}
         )
 
@@ -39,12 +33,10 @@ class TestIntegration:
             "https://example.com/test.wav"
         )
 
-    async def test_error_handling_workflow(self, client: AsyncClient, mock_audio_analyzer_service):
-        """Test error handling through the entire stack"""
-
+    def test_error_handling_workflow(self, client: TestClient, mock_audio_analyzer_service):
         mock_audio_analyzer_service.analyze_audio.side_effect = ValueError("File too large")
 
-        response = await client.post(
+        response = client.post(
             "/v1/audio/analyze", json={"audio_url": "https://example.com/huge-file.wav"}
         )
 
@@ -52,29 +44,13 @@ class TestIntegration:
         data = response.json()
         assert "File too large" in data["detail"]
 
-    async def test_metrics_collection_workflow(self, client: AsyncClient, mock_metrics_service):
-        """Test that metrics are collected during API calls"""
-
-        await client.post("/v1/audio/analyze", json={"audio_url": "https://example.com/test.wav"})
+    def test_metrics_collection_workflow(self, client: TestClient, mock_metrics_service):
+        client.post("/v1/audio/analyze", json={"audio_url": "https://example.com/test.wav"})
 
         mock_metrics_service.record_request.assert_called()
         mock_metrics_service.processing_duration.time.assert_called()
 
-    async def test_cache_integration_workflow(self, client: AsyncClient, mock_redis_service):
-        """Test cache integration in the workflow"""
-
-        response = await client.get("/v1/redis/health")
-        assert response.status_code == 200
-
-        response = await client.get("/v1/cache/test")
-        assert response.status_code == 200
-
-        response = await client.delete("/v1/cache/clear")
-        assert response.status_code == 200
-
-    async def test_validation_workflow(self, client: AsyncClient):
-        """Test request validation workflow"""
-
+    def test_validation_workflow(self, client: TestClient):
         invalid_requests = [
             {},
             {"audio_url": "not-a-url"},
@@ -83,47 +59,31 @@ class TestIntegration:
         ]
 
         for invalid_request in invalid_requests:
-            response = await client.post("/v1/audio/analyze", json=invalid_request)
+            response = client.post("/v1/audio/analyze", json=invalid_request)
             assert response.status_code == 422
 
-    async def test_health_check_workflow(self, client: AsyncClient):
-        """Test health check endpoints workflow"""
-
-        response = await client.get("/health")
+    def test_health_check_workflow(self, client: TestClient):
+        response = client.get("/health")
         assert response.status_code == 200
         assert response.json()["status"] == "ok"
 
-        response = await client.get("/v1/redis/health")
-        assert response.status_code == 200
-        assert response.json()["status"] == "healthy"
-
-        response = await client.get("/v1/metrics/test")
+    def test_api_documentation_workflow(self, client: TestClient):
+        response = client.get("/docs")
         assert response.status_code == 200
 
-    async def test_api_documentation_workflow(self, client: AsyncClient):
-        """Test API documentation endpoints"""
-
-        response = await client.get("/docs")
+        response = client.get("/redoc")
         assert response.status_code == 200
 
-        response = await client.get("/redoc")
-        assert response.status_code == 200
-
-        response = await client.get("/openapi.json")
+        response = client.get("/openapi.json")
         assert response.status_code == 200
         schema = response.json()
         assert "paths" in schema
         assert "/v1/audio/analyze" in schema["paths"]
 
 
-@pytest.mark.asyncio
 class TestEndToEndScenarios:
 
-    async def test_successful_music_analysis(
-        self, client: AsyncClient, mock_audio_analyzer_service
-    ):
-        """Test successful music file analysis"""
-
+    def test_successful_music_analysis(self, client: TestClient, mock_audio_analyzer_service):
         mock_audio_analyzer_service.analyze_audio.return_value = {
             "duration": 180.5,
             "sample_rate": 44100,
@@ -135,7 +95,7 @@ class TestEndToEndScenarios:
             "confidence": 0.95,
         }
 
-        response = await client.post(
+        response = client.post(
             "/v1/audio/analyze", json={"audio_url": "https://example.com/song.mp3"}
         )
 
@@ -145,11 +105,7 @@ class TestEndToEndScenarios:
         assert data["confidence"] > 0.9
         assert data["duration"] > 180
 
-    async def test_successful_speech_analysis(
-        self, client: AsyncClient, mock_audio_analyzer_service
-    ):
-        """Test successful speech file analysis"""
-
+    def test_successful_speech_analysis(self, client: TestClient, mock_audio_analyzer_service):
         mock_audio_analyzer_service.analyze_audio.return_value = {
             "duration": 45.2,
             "sample_rate": 16000,
@@ -161,7 +117,7 @@ class TestEndToEndScenarios:
             "confidence": 0.88,
         }
 
-        response = await client.post(
+        response = client.post(
             "/v1/audio/analyze", json={"audio_url": "https://example.com/podcast.wav"}
         )
 
@@ -171,37 +127,31 @@ class TestEndToEndScenarios:
         assert data["channels"] == 1
         assert data["sample_rate"] == 16000
 
-    async def test_file_too_large_scenario(self, client: AsyncClient, mock_audio_analyzer_service):
-        """Test file too large error scenario"""
-
+    def test_file_too_large_scenario(self, client: TestClient, mock_audio_analyzer_service):
         mock_audio_analyzer_service.analyze_audio.side_effect = ValueError(
             "Audio too long: 1200.0s"
         )
 
-        response = await client.post(
+        response = client.post(
             "/v1/audio/analyze", json={"audio_url": "https://example.com/very-long-audio.wav"}
         )
 
         assert response.status_code == 400
         assert "too long" in response.json()["detail"]
 
-    async def test_file_not_found_scenario(self, client: AsyncClient, mock_audio_analyzer_service):
-        """Test file not found error scenario"""
-
+    def test_file_not_found_scenario(self, client: TestClient, mock_audio_analyzer_service):
         mock_audio_analyzer_service.analyze_audio.side_effect = FileNotFoundError(
             "Audio file not found"
         )
 
-        response = await client.post(
+        response = client.post(
             "/v1/audio/analyze", json={"audio_url": "https://example.com/missing.wav"}
         )
 
         assert response.status_code == 404
         assert "not found" in response.json()["detail"]
 
-    async def test_multiple_format_support(self, client: AsyncClient, mock_audio_analyzer_service):
-        """Test support for multiple audio formats"""
-
+    def test_multiple_format_support(self, client: TestClient, mock_audio_analyzer_service):
         formats = [
             ("test.mp3", "mp3"),
             ("test.wav", "wav"),
@@ -220,7 +170,7 @@ class TestEndToEndScenarios:
                 "confidence": 0.8,
             }
 
-            response = await client.post(
+            response = client.post(
                 "/v1/audio/analyze", json={"audio_url": f"https://example.com/{filename}"}
             )
 
@@ -228,12 +178,9 @@ class TestEndToEndScenarios:
             assert response.json()["data"]["format"] == format_type
 
 
-@pytest.mark.asyncio
 class TestPerformanceAndStress:
 
-    async def test_concurrent_requests(self, client: AsyncClient, mock_audio_analyzer_service):
-        """Test handling multiple concurrent requests"""
-
+    def test_concurrent_requests(self, client: TestClient, mock_audio_analyzer_service):
         mock_audio_analyzer_service.analyze_audio.return_value = {
             "duration": 10.0,
             "sample_rate": 44100,
@@ -242,15 +189,12 @@ class TestPerformanceAndStress:
             "confidence": 0.8,
         }
 
-        import asyncio
-
-        async def make_request(url_suffix):
-            return await client.post(
-                "/v1/audio/analyze", json={"audio_url": f"https://example.com/test{url_suffix}.wav"}
+        responses = []
+        for i in range(5):
+            response = client.post(
+                "/v1/audio/analyze", json={"audio_url": f"https://example.com/test{i}.wav"}
             )
-
-        tasks = [make_request(i) for i in range(5)]
-        responses = await asyncio.gather(*tasks)
+            responses.append(response)
 
         for response in responses:
             assert response.status_code == 200

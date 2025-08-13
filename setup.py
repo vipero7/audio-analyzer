@@ -5,7 +5,7 @@ setup(
     version="1.0.0",
     description="Async audio analysis and classification API",
     packages=find_packages(exclude=["tests*"]),
-    python_requires=">=3.11",
+    python_requires=">=3.10",
     install_requires=[
         "fastapi>=0.104.1",
         "uvicorn[standard]>=0.24.0",

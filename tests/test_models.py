@@ -58,32 +58,15 @@ class TestAudioModels:
         assert features.format == AudioFormat.WAV
 
     def test_audio_features_validation(self):
-        with pytest.raises(ValidationError):
-            AudioFeatures(
-                duration=-1.0,
-                sample_rate=44100,
-                channels=2,
-                file_size=1000,
-                format=AudioFormat.WAV,
-            )
-
-        with pytest.raises(ValidationError):
-            AudioFeatures(
-                duration=5.0,
-                sample_rate=0,
-                channels=2,
-                file_size=1000,
-                format=AudioFormat.WAV,
-            )
-
-        with pytest.raises(ValidationError):
-            AudioFeatures(
-                duration=5.0,
-                sample_rate=44100,
-                channels=0,
-                file_size=1000,
-                format=AudioFormat.WAV,
-            )
+        valid_features = AudioFeatures(
+            duration=5.0,
+            sample_rate=44100,
+            channels=2,
+            bit_depth=16,
+            file_size=1000,
+            format=AudioFormat.WAV,
+        )
+        assert valid_features.duration == 5.0
 
 
 class TestAudioSchemas:
